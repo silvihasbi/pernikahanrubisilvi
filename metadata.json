@@ -1,0 +1,8 @@
+{
+  "name": "Pernikahan Rubi & Silvi - Undangan Digital",
+  "description": "Website undangan pernikahan eksklusif Rubi & Silvi dengan 3D ambient visual, manajemen tamu undangan WhatsApp, galeri foto lightbox, RSVP interaktif, pemutar musik kustom, dan dashboard admin terintegrasi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
