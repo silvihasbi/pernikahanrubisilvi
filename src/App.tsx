@@ -7,6 +7,7 @@ import { BrideGroomSection } from './components/BrideGroomSection.js';
 import { EventRundownSection } from './components/EventRundownSection.js';
 import { LoveStorySection } from './components/LoveStorySection.js';
 import { GallerySection } from './components/GallerySection.js';
+import { VideoAnimationSection } from './components/VideoAnimationSection.js';
 import { DigitalGiftSection } from './components/DigitalGiftSection.js';
 import { HealthProtocolSection } from './components/HealthProtocolSection.js';
 import { RsvpAndWishesSection } from './components/RsvpAndWishesSection.js';
@@ -180,10 +181,15 @@ export default function App() {
               if (exists) return prev;
               return [payload.wish, ...prev];
             });
-          } else if (payload.type === 'reply_wish' && payload.wish) {
+          } else if ((payload.type === 'reply_wish' || payload.type === 'update_wish') && payload.wish) {
             setWishes((prev) =>
               prev.map((w) => (w.id === payload.wish.id ? payload.wish : w))
             );
+          } else if (payload.type === 'settings_update' && payload.settings) {
+            // Real-time update across all user devices when admin edits wedding date, countdown, or song
+            setSettings(payload.settings);
+          } else if (payload.type === 'gallery_update' && payload.gallery) {
+            setGallery(payload.gallery);
           }
         } catch (err) {
           console.error('Error parsing SSE event:', err);
@@ -259,6 +265,9 @@ export default function App() {
 
         {/* Love Story Timeline Section */}
         <LoveStorySection stories={settings.loveStories} />
+
+        {/* Cinematic Video & Animated Teaser Section */}
+        <VideoAnimationSection videoTeaser={settings.videoTeaser} />
 
         {/* Photo Gallery Section */}
         <GallerySection gallery={gallery} />

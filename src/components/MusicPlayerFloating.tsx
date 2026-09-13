@@ -33,13 +33,20 @@ export const MusicPlayerFloating: React.FC<MusicPlayerFloatingProps> = ({
     }
   }, [autoPlayTrigger, hasInteracted, audioSettings.autoPlay]);
 
-  // Handle URL change from backend
+  // Handle URL or track change from backend database in real-time
   useEffect(() => {
-    if (audioRef.current) {
+    if (audioRef.current && audioSettings.audioUrl) {
       audioRef.current.load();
-      if (isPlaying) {
-        audioRef.current.play().catch(() => {});
-      }
+      // Auto-play the new song immediately when updated in database!
+      audioRef.current
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+          setHasInteracted(true);
+        })
+        .catch((err) => {
+          console.log('Autoplay audio switch notice:', err);
+        });
     }
   }, [audioSettings.audioUrl]);
 
@@ -63,7 +70,7 @@ export const MusicPlayerFloating: React.FC<MusicPlayerFloatingProps> = ({
   };
 
   return (
-    <div className="fixed bottom-24 right-4 sm:right-6 z-40 flex items-center">
+    <div className="fixed bottom-20 right-4 sm:right-6 z-40 flex items-center">
       {/* Audio element */}
       <audio
         ref={audioRef}

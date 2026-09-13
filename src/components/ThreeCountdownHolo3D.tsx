@@ -154,7 +154,20 @@ export const ThreeCountdownHolo3D: React.FC<ThreeCountdownHolo3DProps> = ({ targ
         </div>
 
         <p className="text-xs text-neutral-400 mt-4 font-cormorant italic text-center">
-          Sabtu, 24 Oktober 2026 • Menuju Janji Suci Abadi
+          {(() => {
+            try {
+              const d = new Date(targetDateIso);
+              if (!isNaN(d.getTime())) {
+                return `${d.toLocaleDateString('id-ID', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })} • Menuju Janji Suci Abadi`;
+              }
+            } catch {}
+            return 'Menuju Janji Suci Abadi';
+          })()}
         </p>
       </div>
     </div>

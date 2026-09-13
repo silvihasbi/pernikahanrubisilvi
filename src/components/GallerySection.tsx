@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Image as ImageIcon, X, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
+import { Image as ImageIcon, X, ChevronLeft, ChevronRight, Maximize2, Film } from 'lucide-react';
 import { GalleryItem } from '../types.js';
 
 interface GallerySectionProps {
@@ -15,6 +15,10 @@ export const GallerySection: React.FC<GallerySectionProps> = ({ gallery }) => {
   const filteredItems = activeFilter === 'Semua'
     ? gallery
     : gallery.filter((item) => item.category === activeFilter);
+
+  const isVideoItem = (item: GalleryItem) => {
+    return item.mediaType === 'video' || /\.(mp4|webm|mov|m4v)$/i.test(item.url);
+  };
 
   // Keyboard navigation for lightbox
   useEffect(() => {
@@ -42,7 +46,7 @@ export const GallerySection: React.FC<GallerySectionProps> = ({ gallery }) => {
           Momen Berharga
         </p>
         <h2 className="font-cinzel text-3xl sm:text-4xl font-bold tracking-wider gold-gradient-text">
-          Galeri Foto
+          Galeri Foto & Video Animasi
         </h2>
         <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto mt-3" />
         <p className="text-xs sm:text-sm text-neutral-400 max-w-md mx-auto mt-4 font-sans">
@@ -67,36 +71,58 @@ export const GallerySection: React.FC<GallerySectionProps> = ({ gallery }) => {
         ))}
       </div>
 
-      {/* Photo Grid */}
+      {/* Photo & Video Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredItems.map((item, index) => (
-          <div
-            key={item.id}
-            onClick={() => setActiveImageIndex(index)}
-            className="group relative rounded-2xl overflow-hidden glass-panel border border-amber-400/20 cursor-pointer shadow-xl aspect-4/5 transform transition-all duration-500 hover:-translate-y-1.5 hover:border-amber-400/50"
-          >
-            <img
-              src={item.url}
-              alt={item.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-95 contrast-105"
-              loading="lazy"
-              referrerPolicy="no-referrer"
-            />
-            {/* Overlay on hover */}
-            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/90 via-neutral-950/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-              <span className="text-[10px] tracking-widest text-amber-400 uppercase font-sans mb-1">
-                {item.category}
-              </span>
-              <h4 className="font-cinzel text-lg font-bold text-amber-100">
-                {item.title}
-              </h4>
-              <div className="flex items-center space-x-1.5 text-xs text-neutral-300 mt-2">
-                <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
-                <span>Lihat Foto Penuh</span>
+        {filteredItems.map((item, index) => {
+          const isVideo = isVideoItem(item);
+          return (
+            <div
+              key={item.id}
+              onClick={() => setActiveImageIndex(index)}
+              className="group relative rounded-2xl overflow-hidden glass-panel border border-amber-400/20 cursor-pointer shadow-xl aspect-4/5 transform transition-all duration-500 hover:-translate-y-1.5 hover:border-amber-400/50 bg-neutral-950"
+            >
+              {isVideo ? (
+                <video
+                  src={item.url}
+                  muted
+                  loop
+                  playsInline
+                  autoPlay
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+              ) : (
+                <img
+                  src={item.url}
+                  alt={item.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-95 contrast-105"
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                />
+              )}
+
+              {/* Video Badge */}
+              {isVideo && (
+                <div className="absolute top-3 right-3 p-1.5 rounded-full bg-neutral-950/80 border border-amber-400/40 text-amber-300">
+                  <Film className="w-3.5 h-3.5" />
+                </div>
+              )}
+
+              {/* Overlay on hover */}
+              <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/90 via-neutral-950/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                <span className="text-[10px] tracking-widest text-amber-400 uppercase font-sans mb-1">
+                  {item.category}
+                </span>
+                <h4 className="font-cinzel text-lg font-bold text-amber-100">
+                  {item.title}
+                </h4>
+                <div className="flex items-center space-x-1.5 text-xs text-neutral-300 mt-2">
+                  <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{isVideo ? 'Putar Video Penuh' : 'Lihat Foto Penuh'}</span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Lightbox Modal */}
@@ -108,7 +134,7 @@ export const GallerySection: React.FC<GallerySectionProps> = ({ gallery }) => {
           {/* Top Bar with Counter & Close */}
           <div className="absolute top-4 inset-x-4 flex items-center justify-between z-10 max-w-5xl mx-auto">
             <div className="text-xs text-amber-300 font-sans tracking-widest uppercase">
-              Foto {activeImageIndex + 1} dari {filteredItems.length}
+              Media {activeImageIndex + 1} dari {filteredItems.length}
             </div>
             <button
               id="btn-close-lightbox"
@@ -129,7 +155,7 @@ export const GallerySection: React.FC<GallerySectionProps> = ({ gallery }) => {
                 prev !== null ? (prev - 1 + filteredItems.length) % filteredItems.length : null
               );
             }}
-            aria-label="Foto Sebelumnya"
+            aria-label="Media Sebelumnya"
             className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-neutral-900/80 border border-amber-400/30 text-amber-300 hover:bg-neutral-800 transition-colors z-10 cursor-pointer"
           >
             <ChevronLeft className="w-6 h-6" />
@@ -143,20 +169,30 @@ export const GallerySection: React.FC<GallerySectionProps> = ({ gallery }) => {
                 prev !== null ? (prev + 1) % filteredItems.length : null
               );
             }}
-            aria-label="Foto Berikutnya"
+            aria-label="Media Berikutnya"
             className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-neutral-900/80 border border-amber-400/30 text-amber-300 hover:bg-neutral-800 transition-colors z-10 cursor-pointer"
           >
             <ChevronRight className="w-6 h-6" />
           </button>
 
-          {/* Main Photo */}
+          {/* Main Photo / Video */}
           <div className="max-w-4xl max-h-[75vh] flex flex-col items-center justify-center p-2">
-            <img
-              src={filteredItems[activeImageIndex].url}
-              alt={filteredItems[activeImageIndex].title}
-              className="max-w-full max-h-[70vh] object-contain rounded-xl shadow-2xl border border-amber-400/20"
-              referrerPolicy="no-referrer"
-            />
+            {isVideoItem(filteredItems[activeImageIndex]) ? (
+              <video
+                src={filteredItems[activeImageIndex].url}
+                controls
+                autoPlay
+                playsInline
+                className="max-w-full max-h-[70vh] rounded-xl shadow-2xl border border-amber-400/20"
+              />
+            ) : (
+              <img
+                src={filteredItems[activeImageIndex].url}
+                alt={filteredItems[activeImageIndex].title}
+                className="max-w-full max-h-[70vh] object-contain rounded-xl shadow-2xl border border-amber-400/20"
+                referrerPolicy="no-referrer"
+              />
+            )}
             <div className="text-center mt-4">
               <h3 className="font-cinzel text-xl font-bold text-amber-100">
                 {filteredItems[activeImageIndex].title}

@@ -112,7 +112,14 @@ const initialSettings: WeddingSettings = {
     }
   ],
 
-  physicalGiftAddress: 'Penerima: Rubi & Silvi\nAlamat: Cluster Jasmine No. 12, Jl. Kemang Melati Raya, Jakarta Selatan 12730\nNo. HP: 0812-9876-5432'
+  physicalGiftAddress: 'Penerima: Rubi & Silvi\nAlamat: Cluster Jasmine No. 12, Jl. Kemang Melati Raya, Jakarta Selatan 12730\nNo. HP: 0812-9876-5432',
+
+  videoTeaser: {
+    enabled: true,
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-groom-adjusting-his-cufflinks-43403-large.mp4',
+    title: 'Kisah Kasih Menuju Hari Bahagia',
+    caption: 'Cuplikan momen terindah dan komitmen cinta suci Rubi & Silvi',
+  }
 };
 
 const initialGallery: GalleryItem[] = [
@@ -316,7 +323,10 @@ class Database {
       resepsi: {
         ...this.data.settings.resepsi,
         ...(partial.resepsi || {}),
-      }
+      },
+      videoTeaser: partial.videoTeaser !== undefined
+        ? (partial.videoTeaser ? { ...(this.data.settings.videoTeaser || { enabled: true, videoUrl: '', title: '', caption: '' }), ...partial.videoTeaser } : undefined)
+        : this.data.settings.videoTeaser
     };
     this.saveData(this.data);
     return this.data.settings;

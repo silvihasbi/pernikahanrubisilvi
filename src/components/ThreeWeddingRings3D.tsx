@@ -229,9 +229,6 @@ export const ThreeWeddingRings3D: React.FC<ThreeWeddingRings3DProps> = ({
   return (
     <div className={`relative flex items-center justify-center cursor-grab active:cursor-grabbing select-none ${className}`}>
       <div ref={containerRef} className="w-full h-full" />
-      <span className="absolute -bottom-2 text-[10px] text-amber-400/60 tracking-widest uppercase font-sans pointer-events-none">
-        Putar Cincin 3D
-      </span>
     </div>
   );
 };

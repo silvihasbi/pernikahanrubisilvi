@@ -30,12 +30,13 @@ export interface GalleryItem {
   title: string;
   category: 'Prewedding' | 'Engagement' | 'Moments';
   featured?: boolean;
+  mediaType?: 'image' | 'video';
 }
 
 export interface EventRundown {
   title: string;
   subTitle: string;
-  date: string; // e.g. "Minggu, 24 Mei 2026"
+  date: string; // e.g. "Sabtu, 24 Oktober 2026"
   time: string; // e.g. "08:00 - 10:00 WIB"
   venueName: string;
   venueAddress: string;
@@ -66,6 +67,13 @@ export interface AudioSettings {
   autoPlay: boolean;
 }
 
+export interface VideoTeaser {
+  enabled: boolean;
+  videoUrl: string;
+  title: string;
+  caption: string;
+}
+
 export interface WeddingSettings {
   groomName: string;
   groomShortName: string;
@@ -92,6 +100,8 @@ export interface WeddingSettings {
   bankAccounts: BankAccount[];
   loveStories: LoveStory[];
   physicalGiftAddress: string;
+
+  videoTeaser?: VideoTeaser;
 }
 
 export interface WeddingPublicData {

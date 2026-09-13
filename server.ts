@@ -13,7 +13,13 @@ import {
   revokeSessionToken,
 } from './server/auth.js';
 import { uploadMiddleware } from './server/upload.js';
-import { addSseClient, broadcastNewWish, broadcastWishUpdate } from './server/sse.js';
+import {
+  addSseClient,
+  broadcastNewWish,
+  broadcastWishUpdate,
+  broadcastSettingsUpdate,
+  broadcastGalleryUpdate,
+} from './server/sse.js';
 
 const app = express();
 const PORT = 3000;
@@ -260,24 +266,36 @@ app.post('/api/admin/change-password', requireAdmin, (req, res) => {
   });
 });
 
-// 5. Admin Direct Photo Upload from Mobile or Computer
-app.post('/api/admin/upload', requireAdmin, uploadMiddleware.single('photo'), (req, res) => {
-  try {
-    if (!req.file) {
-      res.status(400).json({ error: 'Tidak ada file foto yang diunggah.' });
+// 5. Admin Direct Media & Audio Upload from Mobile Phone or Computer (No external URL required)
+app.post('/api/admin/upload', requireAdmin, (req, res) => {
+  uploadMiddleware.any()(req, res, (err: any) => {
+    if (err) {
+      res.status(400).json({ error: err.message || 'Gagal mengunggah file dari perangkat.' });
+      return;
+    }
+    const files = (req.files as Express.Multer.File[]) || [];
+    const file = files[0] || req.file;
+
+    if (!file) {
+      res.status(400).json({ error: 'Tidak ada file yang dipilih dari perangkat Anda.' });
       return;
     }
 
-    const publicUrl = `/uploads/${req.file.filename}`;
+    const publicUrl = `/uploads/${file.filename}`;
+    const mimetype = (file.mimetype || '').toLowerCase();
+    const isVideo = mimetype.startsWith('video/') || ['video/mp4', 'video/webm', 'video/quicktime'].includes(mimetype);
+    const isAudio = mimetype.startsWith('audio/') || ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a'].includes(mimetype);
+    const mediaType = isVideo ? 'video' : isAudio ? 'audio' : 'image';
+
     res.json({
-      message: 'Foto berhasil diunggah ke server!',
+      message: `${mediaType === 'video' ? 'Video' : mediaType === 'audio' ? 'Lagu MP3' : 'Foto'} berhasil diunggah langsung dari perangkat Anda!`,
       url: publicUrl,
-      filename: req.file.filename,
-      size: req.file.size,
+      filename: file.filename,
+      originalName: file.originalname,
+      mediaType,
+      size: file.size,
     });
-  } catch (err: any) {
-    res.status(500).json({ error: 'Gagal mengunggah foto', details: err?.message });
-  }
+  });
 });
 
 // 6. Admin Dashboard Statistics
@@ -453,18 +471,20 @@ app.get('/api/admin/settings', requireAdmin, (_req, res) => {
 app.put('/api/admin/settings', requireAdmin, (req, res) => {
   try {
     const updated = db.updateSettings(req.body);
+    // Real-time broadcast: all connected phones & computers immediately reflect new settings & songs!
+    broadcastSettingsUpdate(updated);
     res.json({ message: 'Pengaturan pernikahan & lagu berhasil diperbarui!', settings: updated });
   } catch (err: any) {
     res.status(500).json({ error: 'Gagal memperbarui pengaturan', details: err?.message });
   }
 });
 
-// 10. Gallery Management
+// 10. Gallery & Animated Media Management
 app.post('/api/admin/gallery', requireAdmin, (req, res) => {
   try {
-    const { url, title, category, featured } = req.body;
+    const { url, title, category, featured, mediaType } = req.body;
     if (!url || !title) {
-      res.status(400).json({ error: 'URL foto dan judul foto wajib diisi.' });
+      res.status(400).json({ error: 'URL media dan judul wajib diisi.' });
       return;
     }
     const item = db.addGalleryItem({
@@ -472,10 +492,13 @@ app.post('/api/admin/gallery', requireAdmin, (req, res) => {
       title,
       category: category || 'Prewedding',
       featured: Boolean(featured),
+      mediaType: mediaType || 'image',
     });
-    res.status(201).json({ message: 'Foto berhasil ditambahkan ke galeri.', item });
+    // Broadcast gallery update real-time
+    broadcastGalleryUpdate(db.getGallery());
+    res.status(201).json({ message: 'Media berhasil ditambahkan ke galeri.', item });
   } catch (err: any) {
-    res.status(500).json({ error: 'Gagal menambahkan foto', details: err?.message });
+    res.status(500).json({ error: 'Gagal menambahkan media', details: err?.message });
   }
 });
 
@@ -483,12 +506,13 @@ app.delete('/api/admin/gallery/:id', requireAdmin, (req, res) => {
   try {
     const deleted = db.deleteGalleryItem(req.params.id);
     if (!deleted) {
-      res.status(404).json({ error: 'Foto tidak ditemukan.' });
+      res.status(404).json({ error: 'Media tidak ditemukan.' });
       return;
     }
-    res.json({ message: 'Foto berhasil dihapus dari galeri.' });
+    broadcastGalleryUpdate(db.getGallery());
+    res.json({ message: 'Media berhasil dihapus dari galeri.' });
   } catch (err: any) {
-    res.status(500).json({ error: 'Gagal menghapus foto', details: err?.message });
+    res.status(500).json({ error: 'Gagal menghapus media', details: err?.message });
   }
 });
 

@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { Wish } from '../src/types.js';
+import { Wish, WeddingSettings, GalleryItem } from '../src/types.js';
 
 interface SseClient {
   id: string;
@@ -33,6 +33,28 @@ export function broadcastNewWish(wish: Wish): void {
 
 export function broadcastWishUpdate(wish: Wish): void {
   const data = JSON.stringify({ type: 'update_wish', wish });
+  for (const client of clients) {
+    try {
+      client.res.write(`data: ${data}\n\n`);
+    } catch {
+      // client disconnected
+    }
+  }
+}
+
+export function broadcastSettingsUpdate(settings: WeddingSettings): void {
+  const data = JSON.stringify({ type: 'settings_update', settings });
+  for (const client of clients) {
+    try {
+      client.res.write(`data: ${data}\n\n`);
+    } catch {
+      // client disconnected
+    }
+  }
+}
+
+export function broadcastGalleryUpdate(gallery: GalleryItem[]): void {
+  const data = JSON.stringify({ type: 'gallery_update', gallery });
   for (const client of clients) {
     try {
       client.res.write(`data: ${data}\n\n`);
